@@ -8,10 +8,15 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "strict": true,
-    "verbatimModuleSyntax": true, 
+    "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "skipLibCheck": true,
     "moduleResolution": "NodeNext",
-    "types": ["node"],
-  }
+    "types": [
+      "node"
+    ],
+  },
+  "exclude": [
+    "prisma.config.ts"
+  ]
 }
