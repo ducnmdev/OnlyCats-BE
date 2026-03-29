@@ -3,10 +3,12 @@ import Stripe from "stripe";
 import prisma from "../lib/prisma.js";
 import { stripe } from "../lib/stripe.js";
 
-const webhookSecret =
-    process.env.NODE_ENV === "development"
-        ? process.env.STRIPE_WEBHOOK_SECRET_DEV_KEY!
-        : process.env.STRIPE_WEBHOOK_SECRET_LIVE_KEY!;
+// const webhookSecret =
+//     process.env.NODE_ENV === "development"
+//         ? process.env.STRIPE_WEBHOOK_SECRET_DEV_KEY!
+//         : process.env.STRIPE_WEBHOOK_SECRET_LIVE_KEY!;
+
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET_LIVE_KEY!;
 
 export const stripeWebhook = async (req: Request, res: Response) => {
     const sig = req.headers["stripe-signature"];
