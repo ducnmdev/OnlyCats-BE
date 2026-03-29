@@ -33,8 +33,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
     const data = event.data;
     const eventType = event.type;
 
-    console.log("🔥 Webhook received:", eventType);
-
     try {
         switch (eventType) {
             // CHECKOUT SUCCESS
@@ -50,38 +48,25 @@ export const stripeWebhook = async (req: Request, res: Response) => {
                 const customerDetails = session.customer_details;
                 const lineItems = session.line_items?.data || [];
 
-                console.log("Customer ID:", customerId);
-                console.log("Customer Email:", customerDetails?.email);
+                if (!customerDetails?.email) break;
 
-                // 🔥 FIND USER (FIX CHUẨN)
-                let user = await prisma.user.findUnique({
-                    where: { customerId }
+                const user = await prisma.user.findUnique({
+                    where: { email: customerDetails.email },
                 });
-
-                // fallback email nếu chưa có customerId
-                if (!user && customerDetails?.email) {
-                    user = await prisma.user.findUnique({
-                        where: { email: customerDetails.email },
-                    });
-
-                    if (user && !user.customerId) {
-                        await prisma.user.update({
-                            where: { id: user.id },
-                            data: { customerId },
-                        });
-                    }
-                }
 
                 if (!user) throw new Error("User not found");
 
-                console.log("User found:", user.id);
+                // save customerId
+                if (!user.customerId) {
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: { customerId },
+                    });
+                }
 
                 for (const item of lineItems) {
                     const priceId = item.price?.id;
                     const isSubscription = item.price?.type === "recurring";
-
-                    console.log("priceId:", priceId);
-                    console.log("type:", item.price?.type);
 
                     // SUBSCRIPTION
                     if (isSubscription) {
@@ -114,8 +99,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
                             where: { id: user.id },
                             data: { isSubscribed: true },
                         });
-
-                        console.log("✅ User subscribed:", user.id);
                     }
 
                     // ONE TIME ORDER
@@ -143,8 +126,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
                                 },
                             },
                         });
-
-                        console.log("✅ Order paid:", orderId);
                     }
                 }
 
@@ -166,8 +147,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
                         where: { id: user.id },
                         data: { isSubscribed: false },
                     });
-
-                    console.log("❌ Subscription cancelled:", user.id);
                 }
 
                 break;
@@ -183,7 +162,6 @@ export const stripeWebhook = async (req: Request, res: Response) => {
                     where: { id: session.metadata!.orderId! },
                 });
 
-                console.log("⚠️ Session expired, order deleted");
                 break;
             }
 
